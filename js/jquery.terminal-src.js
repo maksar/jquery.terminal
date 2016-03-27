@@ -3380,14 +3380,7 @@
                 // execute_extended_command disable it and it can be executed
                 // after delay
                 var saved_change_hash = change_hash;
-                if (command.match(/^\s*login\s*$/i) && self.token(true)) {
-                    if (self.level() > 1) {
-                        self.logout(true);
-                    } else {
-                        self.logout();
-                    }
-                    after_exec();
-                } else if (command.match(/^\s*(exit|clear)\s*$/i) && !in_login) {
+                if (command.match(/^\s*(exit|clear)\s*$/i) && !in_login) {
                     if (settings.exit && command.match(/^\s*exit\s*$/i)) {
                         var level = self.level();
                         if (level == 1 && self.get_token() || level > 1) {
