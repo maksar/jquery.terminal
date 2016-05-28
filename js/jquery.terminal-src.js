@@ -3898,7 +3898,7 @@
             // :: the callback that expects a token. The login is successful
             // :: if the user calls it with value that is truthy
             // -------------------------------------------------------------
-            login: function(auth, infinite, success, error) {
+            login: function(auth, infinite, success, error, email) {
                 logins.push([].slice.call(arguments));
                 if (in_login) {
                     throw new Error(sprintf(strings.notWhileLogin, 'login'));
@@ -3950,7 +3950,12 @@
                             if (!silent) {
                                 self.error(strings.wrongPassword);
                             }
-                            self.pop().pop();
+                            if (email) {
+                                self.pop();
+                            } else {
+                                self.pop().pop();
+                            }
+
                         }
                         // used only to call pop in push
                         if ($.isFunction(error)) {
@@ -3962,7 +3967,7 @@
                 self.on('terminal.autologin', function(event, user, token, silent) {
                     login_callback(user, token, silent);
                 });
-                return self.push(function(user) {
+                var pass = function(user) {
                     self.set_mask(settings.maskChar).push(function(pass) {
                         try {
                             auth.call(self, user, pass, function(token, silent) {
@@ -3975,10 +3980,17 @@
                         prompt: strings.password + ': ',
                         name: 'password'
                     });
-                }, {
-                    prompt: strings.login + ': ',
-                    name: 'login'
-                });
+                };
+
+                if (email) {
+                    // level = level - 1;
+                    return pass(email);
+                } else {
+                    return self.push(pass, {
+                        prompt: strings.login + ': ',
+                        name: 'login'
+                    });
+                }
             },
             // -------------------------------------------------------------
             // :: User defined settings and defaults as well
