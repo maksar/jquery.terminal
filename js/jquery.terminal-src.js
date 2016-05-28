@@ -1331,6 +1331,9 @@
         // :: Keydown Event Handler
         // ---------------------------------------------------------------------
         function keydown_event(e) {
+            if (!window.terminal.enabled() || window.terminal.paused()) {
+                return undefined;
+            }
             var result, pos, len;
             if (enabled) {
                 if ($.isFunction(options.keydown)) {
