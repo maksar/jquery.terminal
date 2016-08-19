@@ -1668,7 +1668,7 @@
                 return self;
             },
             insert: function(string, stay) {
-                string = string.slice(0, 1024 - command.length)
+                string = string.slice(0, 1031 - command.length);
                 if (position === command.length) {
                     command += string;
                 } else if (position === 0) {
