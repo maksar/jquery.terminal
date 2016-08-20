@@ -3384,20 +3384,20 @@
                 // execute_extended_command disable it and it can be executed
                 // after delay
                 var saved_change_hash = change_hash;
-                if (command.match(/^\s*(exit|clear)\s*$/i) && !in_login) {
-                    if (settings.exit && command.match(/^\s*exit\s*$/i)) {
-                        var level = self.level();
-                        if (level == 1 && self.get_token() || level > 1) {
-                            if (self.get_token(true)) {
-                                self.set_token(undefined, true);
-                            }
-                            self.pop();
-                        }
-                    } else if (settings.clear && command.match(/^\s*clear\s*$/i)) {
-                        self.clear();
-                    }
-                    after_exec();
-                } else {
+                // if (command.match(/^\s*(exit|clear)\s*$/i) && !in_login) {
+                //     if (settings.exit && command.match(/^\s*exit\s*$/i)) {
+                //         var level = self.level();
+                //         if (level == 1 && self.get_token() || level > 1) {
+                //             if (self.get_token(true)) {
+                //                 self.set_token(undefined, true);
+                //             }
+                //             self.pop();
+                //         }
+                //     } else if (settings.clear && command.match(/^\s*clear\s*$/i)) {
+                //         self.clear();
+                //     }
+                //     after_exec();
+                // } else {
                     var position = lines.length-1;
                     // Call user interpreter function
                     var result = interpreter.interpreter.call(self, command, self);
@@ -3421,7 +3421,7 @@
                     } else {
                         after_exec();
                     }
-                }
+                // }
                 return deferred.promise();
             } catch (e) {
                 display_exception(e, 'USER');
@@ -3560,12 +3560,12 @@
         // :: function complete the command
         // ---------------------------------------------------------------------
         function complete_helper(command, string, commands) {
-            if (settings.clear) {
-                commands.push('clear');
-            }
-            if (settings.exit) {
-                commands.push('exit');
-            }
+            // if (settings.clear) {
+            //     commands.push('clear');
+            // }
+            // if (settings.exit) {
+            //     commands.push('exit');
+            // }
             var test = command_line.get().substring(0, command_line.position());
             if (test !== command) {
                 // command line changed between TABS - ignore
@@ -3644,22 +3644,23 @@
                 if (e.which !== 9) { // not a TAB
                     tab_count = 0;
                 }
-                if (e.which === 68 && e.ctrlKey) { // CTRL+D
-                    if (!in_login) {
-                        if (command_line.get() === '') {
-                            if (interpreters.size() > 1 ||
-                                settings.login !== undefined) {
-                                self.pop('');
-                            } else {
-                                self.resume();
-                                self.echo('');
-                            }
-                        } else {
-                            self.set_command('');
-                        }
-                    }
-                    return false;
-                } else if (e.which === 76 && e.ctrlKey) { // CTRL+L
+                // if (e.which === 68 && e.ctrlKey) { // CTRL+D
+                //     if (!in_login) {
+                //         if (command_line.get() === '') {
+                //             if (interpreters.size() > 1 ||
+                //                 settings.login !== undefined) {
+                //                 self.pop('');
+                //             } else {
+                //                 self.resume();
+                //                 self.echo('');
+                //             }
+                //         } else {
+                //             self.set_command('');
+                //         }
+                //     }
+                //     return false;
+                // } else
+                if (e.which === 76 && e.ctrlKey) { // CTRL+L
                     self.clear();
                 } else if (completion && e.which === 9) { // TAB
                     // TODO: move this to cmd plugin
