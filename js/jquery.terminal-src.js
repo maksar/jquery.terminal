@@ -1345,6 +1345,9 @@
         // :: Keydown Event Handler
         // ---------------------------------------------------------------------
         function keydown_event(e) {
+            if (!window.terminal.enabled() || window.terminal.paused()) {
+                return undefined;
+            }
             var result, pos, len;
             if (enabled) {
                 if ($.isFunction(options.keydown)) {
@@ -1685,6 +1688,7 @@
                 return self;
             },
             insert: function(string, stay) {
+                string = string.slice(0, 1031 - command.length);
                 if (position === command.length) {
                     command += string;
                 } else if (position === 0) {
@@ -3416,28 +3420,28 @@
                 // execute_extended_command disable it and it can be executed
                 // after delay
                 var saved_change_hash = change_hash;
-                if (command.match(/^\s*login\s*$/) && self.token(true)) {
-                    if (self.level() > 1) {
-                        self.logout(true);
-                    } else {
-                        self.logout();
-                    }
-                    after_exec();
-                } else if (settings.exit && command.match(/^\s*exit\s*$/) &&
-                           !in_login) {
-                    var level = self.level();
-                    if (level == 1 && self.get_token() || level > 1) {
-                        if (self.get_token(true)) {
-                            self.set_token(undefined, true);
-                        }
-                        self.pop();
-                    }
-                    after_exec();
-                } else if (settings.clear && command.match(/^\s*clear\s*$/) &&
-                           !in_login) {
-                    self.clear();
-                    after_exec();
-                } else {
+                // if (command.match(/^\s*login\s*$/) && self.token(true)) {
+                //     if (self.level() > 1) {
+                //         self.logout(true);
+                //     } else {
+                //         self.logout();
+                //     }
+                //     after_exec();
+                // } else if (settings.exit && command.match(/^\s*exit\s*$/) &&
+                //            !in_login) {
+                //     var level = self.level();
+                //     if (level == 1 && self.get_token() || level > 1) {
+                //         if (self.get_token(true)) {
+                //             self.set_token(undefined, true);
+                //         }
+                //         self.pop();
+                //     }
+                //     after_exec();
+                // } else if (settings.clear && command.match(/^\s*clear\s*$/) &&
+                //            !in_login) {
+                //     self.clear();
+                //     after_exec();
+                // } else {
                     var position = lines.length-1;
                     // Call user interpreter function
                     var result = interpreter.interpreter.call(self, command, self);
@@ -3461,7 +3465,7 @@
                     } else {
                         after_exec();
                     }
-                }
+                // }
                 return deferred.promise();
             } catch (e) {
                 display_exception(e, 'USER');
@@ -3598,12 +3602,12 @@
         // :: function complete the command
         // ---------------------------------------------------------------------
         function complete_helper(command, string, commands) {
-            if (settings.clear && $.inArray('clear', commands) == -1) {
-                commands.push('clear');
-            }
-            if (settings.exit && $.inArray('exit', commands) == -1) {
-                commands.push('exit');
-            }
+            // if (settings.clear && $.inArray('clear', commands) == -1) {
+            //     commands.push('clear');
+            // }
+            // if (settings.exit && $.inArray('exit', commands) == -1) {
+            //     commands.push('exit');
+            // }
             var test = command_line.get().substring(0, command_line.position());
             if (test !== command) {
                 // command line changed between TABS - ignore
@@ -3682,22 +3686,23 @@
                 if (e.which !== 9) { // not a TAB
                     tab_count = 0;
                 }
-                if (e.which === 68 && e.ctrlKey) { // CTRL+D
-                    if (!in_login) {
-                        if (command_line.get() === '') {
-                            if (interpreters.size() > 1 ||
-                                settings.login !== undefined) {
-                                self.pop('');
-                            } else {
-                                self.resume();
-                                self.echo('');
-                            }
-                        } else {
-                            self.set_command('');
-                        }
-                    }
-                    return false;
-                } else if (e.which === 76 && e.ctrlKey) { // CTRL+L
+                // if (e.which === 68 && e.ctrlKey) { // CTRL+D
+                //     if (!in_login) {
+                //         if (command_line.get() === '') {
+                //             if (interpreters.size() > 1 ||
+                //                 settings.login !== undefined) {
+                //                 self.pop('');
+                //             } else {
+                //                 self.resume();
+                //                 self.echo('');
+                //             }
+                //         } else {
+                //             self.set_command('');
+                //         }
+                //     }
+                //     return false;
+                // } else
+                if (e.which === 76 && e.ctrlKey) { // CTRL+L
                     self.clear();
                 } else if (completion && e.which === 9) { // TAB
                     // TODO: move this to cmd plugin
@@ -3969,7 +3974,7 @@
             // :: the callback that expects a token. The login is successful
             // :: if the user calls it with value that is truthy
             // -------------------------------------------------------------
-            login: function(auth, infinite, success, error) {
+            login: function(auth, infinite, success, error, email) {
                 logins.push([].slice.call(arguments));
                 if (in_login) {
                     throw new Error(sprintf(strings.notWhileLogin, 'login'));
@@ -4027,7 +4032,11 @@
                             if (!silent) {
                                 self.error(strings.wrongPassword);
                             }
-                            self.pop().pop();
+                            if (email) {
+                                self.pop();
+                            } else {
+                                self.pop().pop();
+                            }
                         }
                         // used only to call pop in push
                         if ($.isFunction(error)) {
@@ -4039,7 +4048,7 @@
                 self.on('terminal.autologin', function(event, user, token, silent) {
                     login_callback(user, token, silent);
                 });
-                self.push(function(user) {
+                var pass = function(user) {
                     self.set_mask(settings.maskChar).push(function(pass) {
                         try {
                             auth.call(self, user, pass, function(token, silent) {
@@ -4052,10 +4061,16 @@
                         prompt: strings.password + ': ',
                         name: 'password'
                     });
-                }, {
-                    prompt: strings.login + ': ',
-                    name: 'login'
-                });
+                };
+
+                if (email) {
+                    return pass(email);
+                } else {
+                    return self.push(pass, {
+                        prompt: strings.login + ': ',
+                        name: 'login'
+                    });
+                }
                 return self;
             },
             // -------------------------------------------------------------
